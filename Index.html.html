@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>V</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=IM+Fell+English:ital@0;1&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@600;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            color: #f1f5f9;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-serif-story { font-family: 'IM Fell English', serif; }
+        .font-code { font-family: 'JetBrains Mono', monospace; }
+
+        /* Perfect 1:1 Synchronized Lightning Flash Animation */
+        @keyframes thunderFlash {
+            0%, 91%, 100% { opacity: 0; }
+            93% { opacity: 0.45; }
+            95% { opacity: 0.1; }
+            97% { opacity: 0.95; }
+        }
+
+        .lightning-overlay {
+            animation: thunderFlash 5s infinite ease-in-out;
+        }
+
+        /* Lightning effect for numbers - 100% invisible except during exact flash instant, NO BORDER */
+        @keyframes lightningClue {
+            0%, 91%, 100% { 
+                opacity: 0; 
+                filter: drop-shadow(0 0 0px transparent);
+            }
+            93% { 
+                opacity: 0.5; 
+                filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5));
+            }
+            95% { 
+                opacity: 0.15; 
+                filter: drop-shadow(0 0 2px rgba(56, 189, 248, 0.2));
+            }
+            97% { 
+                opacity: 1; 
+                filter: drop-shadow(0 0 20px rgba(56, 189, 248, 1));
+            }
+        }
+
+        .lightning-text {
+            animation: lightningClue 5s infinite ease-in-out;
+        }
+
+        /* Readable yet atmospheric logbook style */
+        .logbook-readable {
+            filter: blur(1.5px);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Tactile retro keyboard styling */
+        .retro-key {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.1s ease;
+        }
+        .retro-key:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            border-color: #06b6d4;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden relative">
+
+    <!-- 
+        ===================================================================
+        GEOCACHING MYSTERY DATA - HERMANN FLAKES TRAUM (BUCHSTABE V)
+        FINAL COORDINATES FOR THE CACHE (NUR IM QUELLTEXT SICHTBAR):
+        LATITUDE / LONGITUDE: N 51° 58.533' E 007° 11.588'
+        CERTITUDE CHECKER LINK: https://www.certitudes.org/certitude?wp=GCBY2FF
+        ===================================================================
+    -->
+
+    <!-- Lightning Overlay FX -->
+    <div class="lightning-overlay fixed inset-0 bg-cyan-100 pointer-events-none z-40"></div>
+
+    <!-- Header Bar -->
+    <header class="w-full p-3 bg-slate-900/90 border-b border-cyan-900/60 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between shadow-xl">
+        <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-950 via-slate-900 to-amber-950 border border-cyan-500/70 flex items-center justify-center text-amber-400 font-bold font-cinzel text-xl shadow-inner">
+                V
+            </div>
+            <div>
+                <h1 class="font-cinzel text-xs sm:text-sm font-extrabold text-cyan-100 leading-tight">
+                    MS. - Osterwick V
+                </h1>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button id="btnSound" class="p-2 bg-slate-800 active:bg-cyan-900 border border-slate-700 rounded-lg text-cyan-400 text-xs flex items-center justify-center transition-colors" title="Düstere Musik ein-/ausschalten">
+                <i id="soundIcon" class="fa-solid fa-volume-xmark"></i>
+            </button>
+            <button id="btnReset" class="p-2 bg-slate-800 active:bg-red-900 border border-slate-700 rounded-lg text-slate-300 text-xs flex items-center justify-center transition-colors" title="Neustart">
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Viewport -->
+    <main class="flex-grow flex flex-col items-center justify-start p-3 max-w-xl mx-auto w-full gap-3">
+        
+        <!-- SVG Interactive Graphic -->
+        <div id="sceneViewport" class="w-full aspect-[16/10] bg-slate-950 border-2 border-cyan-800/80 rounded-2xl relative overflow-hidden shadow-2xl flex items-center justify-center group">
+            <div id="sceneGraphics" class="w-full h-full relative">
+                <!-- SVG Visuals rendered via JS -->
+            </div>
+        </div>
+
+        <!-- Narrative Description Container -->
+        <div class="w-full bg-slate-900/90 border border-cyan-900/60 rounded-2xl p-4 shadow-xl flex flex-col justify-between min-h-[90px] relative">
+            <div id="storyText" class="font-serif-story text-sm sm:text-base text-slate-200 leading-relaxed overflow-y-auto max-h-[140px] pr-1">
+                <!-- Dynamic story text -->
+            </div>
+        </div>
+
+        <!-- Interactive Puzzle Controls -->
+        <div id="puzzlePanel" class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 shadow-xl flex flex-col items-center justify-center min-h-[120px]">
+            <!-- Dynamic Controls -->
+        </div>
+
+    </main>
+
+    <!-- Victory Modal -->
+    <div id="victoryModal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
+        <div class="max-w-sm w-full bg-slate-900 border-2 border-cyan-500 rounded-2xl p-6 text-center shadow-2xl relative my-auto">
+            <div class="w-16 h-16 bg-gradient-to-tr from-amber-500 via-cyan-500 to-teal-400 text-slate-950 rounded-2xl flex items-center justify-center mx-auto mb-3 text-3xl font-bold shadow-lg shadow-cyan-500/30 animate-bounce">
+                <i class="fa-solid fa-anchor"></i>
+            </div>
+            
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-900/80 text-emerald-300 border border-emerald-500/40 uppercase tracking-widest mb-2 inline-block">
+                Geocaching Gehemnis
+            </span>
+            
+            <h2 class="text-2xl font-cinzel font-bold text-white mb-2">V</h2>
+            <p class="font-serif-story text-slate-300 italic text-sm mb-4">„Traum entschlüsselt, oder?“</p>
+
+            <!-- Action Buttons -->
+            <div class="space-y-3 mt-4">
+                <a id="certitudeLink" href="https://www.certitudes.org/certitude?wp=GCBY2FF" target="_blank" rel="noopener noreferrer" 
+                   class="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold rounded-xl shadow-xl flex items-center justify-center gap-2 transition-all transform active:scale-95">
+                    <i class="fa-solid fa-square-check text-xl"></i>
+                    <span class="text-sm">Auf Certitudes prüfen</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-70"></i>
+                </a>
+
+                <!-- Copy Link Button -->
+                <button onclick="copyCertitudeLink()" class="w-full py-2.5 px-3 bg-slate-800 hover:bg-slate-700 active:bg-cyan-900 border border-slate-700 text-cyan-300 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors">
+                    <i class="fa-solid fa-copy"></i>
+                    <span>Checker-Link kopieren</span>
+                </button>
+            </div>
+
+            <button id="btnPlayAgain" class="mt-5 text-xs text-slate-400 hover:text-white underline transition-colors">
+                Erneut spielen
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-2xl flex items-center gap-2">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toastMsg">Link kopiert!</span>
+    </div>
+
+    <script>
+        const CERTITUDE_URL = "https://www.certitudes.org/certitude?wp=GCBY2FF";
+
+        class WebAudioFX {
+            constructor() { 
+                this.ctx = null; 
+                this.muted = true; 
+                this.ambientInterval = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            startAmbientMusic() {
+                if (this.ambientInterval) return;
+                this.playDroneChord();
+                this.ambientInterval = setInterval(() => {
+                    if (!this.muted) {
+                        this.playDroneChord();
+                    }
+                }, 7000);
+            }
+            stopAmbientMusic() {
+                if (this.ambientInterval) {
+                    clearInterval(this.ambientInterval);
+                    this.ambientInterval = null;
+                }
+            }
+            playDroneChord() {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const freqs = [65.41, 98.00, 116.54, 155.56]; // C2, G2, D#3, D#3
+                    
+                    freqs.forEach(freq => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq + (Math.random() * 0.8 - 0.4), now);
+
+                        const filter = this.ctx.createBiquadFilter();
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(220, now);
+
+                        gain.gain.setValueAtTime(0.001, now);
+                        gain.gain.linearRampToValueAtTime(0.04, now + 2.5);
+                        gain.gain.linearRampToValueAtTime(0.001, now + 6.8);
+
+                        osc.connect(filter);
+                        filter.connect(gain);
+                        gain.connect(this.ctx.destination);
+
+                        osc.start(now);
+                        osc.stop(now + 7.0);
+                    });
+                } catch(e){}
+            }
+            vibrate(pattern = 15) {
+                if ('vibrate' in navigator) {
+                    try { navigator.vibrate(pattern); } catch(e){}
+                }
+            }
+            playClick() {
+                this.vibrate(12);
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(580, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
+                    gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.05);
+                } catch(e){}
+            }
+            playSolve() {
+                this.vibrate([30, 50, 30]);
+                if (this.muted || !this.ctx) return;
+                try {
+                    const notes = [329.63, 440.00, 554.37, 659.25];
+                    notes.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.09);
+                        gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.09);
+                        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.09 + 0.2);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(this.ctx.currentTime + idx * 0.08);
+                        osc.stop(this.ctx.currentTime + idx * 0.08 + 0.2);
+                    });
+                } catch(e){}
+            }
+            playError() {
+                this.vibrate([80, 40, 80]);
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(80, this.ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.2);
+                } catch(e){}
+            }
+        }
+
+        const audio = new WebAudioFX();
+
+        let currentStage = 0; // 0 = Title Screen (Hermann träumt)
+
+        let puzzleState = {
+            stg1: { flags: ['C', 'W', 'K', 'I'], target: ['W', 'I', 'C', 'K'], solved: false },
+            stg2: { v1: 0, v2: 0, v3: 0, target1: 5, target2: 8, target3: 5, solved: false },
+            stg3: { inputCode: '', solved: false },
+            stg4: { angleA: 10, angleB: 70, targetA: 51, targetB: 7, solved: false }
+        };
+
+        function randomizePuzzleValues() {
+            puzzleState.stg2.target1 = Math.floor(Math.random() * 9) + 1;
+            puzzleState.stg2.target2 = Math.floor(Math.random() * 9) + 1;
+            puzzleState.stg2.target3 = Math.floor(Math.random() * 9) + 1;
+
+            puzzleState.stg4.targetA = Math.floor(Math.random() * 85) + 3;
+            puzzleState.stg4.targetB = Math.floor(Math.random() * 85) + 3;
+        }
+
+        function getVString(count) {
+            return 'V'.repeat(count);
+        }
+
+        const STAGES = {
+            0: {
+                story: "Hermann Flake schließt die Augen und driftet in einen tiefen, stürmischen Traum ab. Vor seinem inneren Auge taucht der Buchstabe V auf...",
+                graphics: `
+                    <svg viewBox="0 0 400 250" class="w-full h-full">
+                        <defs>
+                            <linearGradient id="dreamGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#090d16"/>
+                                <stop offset="100%" stop-color="#020617"/>
+                            </linearGradient>
+                            <linearGradient id="hullGrad" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%" stop-color="#1e1b4b"/>
+                                <stop offset="50%" stop-color="#0f172a"/>
+                                <stop offset="100%" stop-color="#090d16"/>
+                            </linearGradient>
+                        </defs>
+                        <rect width="400" height="250" fill="url(#dreamGrad)"/>
+                        
+                        <!-- Atmospheric moon / glow -->
+                        <circle cx="200" cy="95" r="55" fill="#1e293b" opacity="0.4"/>
+                        <circle cx="200" cy="95" r="35" fill="#334155" opacity="0.3"/>
+                        <text x="200" y="162" text-anchor="middle" font-size="11" font-weight="bold" fill="#64748b" font-family="'JetBrains Mono', monospace" letter-spacing="3">VERSION 2</text>
+
+                        <!-- Zweimaster (Two-masted sailing ship) silhouette on rough dream waves -->
+                        <g transform="translate(145, 110)">
+                            <!-- Hull -->
+                            <path d="M 10 40 Q 55 52 100 40 L 85 55 Q 55 60 25 55 Z" fill="url(#hullGrad)" stroke="#38bdf8" stroke-width="0.8"/>
+                            <!-- Mast 1 (Fore) -->
+                            <line x1="35" y1="42" x2="35" y2="5" stroke="#94a3b8" stroke-width="2"/>
+                            <!-- Mast 2 (Main) -->
+                            <line x1="75" y1="40" x2="75" y2="-2" stroke="#94a3b8" stroke-width="2.5"/>
+                            <!-- Sails -->
+                            <path d="M 35 10 Q 50 20 35 30 Z" fill="#64748b" opacity="0.7"/>
+                            <path d="M 75 5 Q 95 18 75 32 Z" fill="#64748b" opacity="0.7"/>
+                            <path d="M 35 15 Q 20 22 35 32 Z" fill="#475569" opacity="0.6"/>
+                            <!-- Rigging lines -->
+                            <line x1="10" y1="42" x2="35" y2="5" stroke="#64748b" stroke-width="0.5"/>
+                            <line x1="75" y1="-2" x2="100" y2="40" stroke="#64748b" stroke-width="0.5"/>
+                        </g>
+
+                        <!-- Storm waves under ship -->
+                        <path d="M 0 160 Q 100 145 200 160 T 400 160 L 400 250 L 0 250 Z" fill="#032b43" opacity="0.5"/>
+                        <path d="M 0 175 Q 120 160 250 178 T 400 170 L 400 250 L 0 250 Z" fill="#020617" opacity="0.8"/>
+
+                        <!-- Central V Emblem -->
+                        <text x="200" y="75" text-anchor="middle" font-size="38" font-weight="900" fill="#f59e0b" font-family="'Cinzel', serif" filter="drop-shadow(0 0 12px rgba(245, 158, 11, 0.7))">V</text>
+                        
+                        <text x="200" y="198" text-anchor="middle" font-size="11" font-weight="bold" fill="#38bdf8" font-family="'JetBrains Mono', monospace" letter-spacing="2">MS. - OSTERWICK</text>
+                        <text x="200" y="218" text-anchor="middle" font-size="11" fill="#94a3b8" font-family="serif" font-style="italic">„Ein Zweimaster im Sturmtraum...“</text>
+                    </svg>
+                `
+            },
+            1: {
+                story: "Hermann Flake steht auf dem peitschenden Holzdeck der <strong>MS. - Osterwick</strong>. An der mächtigen V-förmigen Takelage baumeln verdrehte Signalflaggen.",
+                graphics: `
+                    <svg viewBox="0 0 400 250" class="w-full h-full">
+                        <defs>
+                            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#020617"/>
+                                <stop offset="100%" stop-color="#0f172a"/>
+                            </linearGradient>
+                            <linearGradient id="seaGrad1" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#0369a1"/>
+                                <stop offset="100%" stop-color="#082f49"/>
+                            </linearGradient>
+                            <linearGradient id="woodGrad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#78350f"/>
+                                <stop offset="50%" stop-color="#451a03"/>
+                                <stop offset="100%" stop-color="#291002"/>
+                            </linearGradient>
+                        </defs>
+
+                        <rect width="400" height="250" fill="url(#skyGrad)"/>
+                        <path d="M 20 0 L 0 40 M 80 0 L 60 40 M 140 0 L 120 40 M 200 0 L 180 40 M 260 0 L 240 40 M 320 0 L 300 40 M 380 0 L 360 40" stroke="#38bdf8" stroke-width="0.8" opacity="0.3"/>
+                        <path d="M 0 160 Q 70 135 150 165 T 300 150 T 400 170 L 400 250 L 0 250 Z" fill="url(#seaGrad1)"/>
+                        
+                        <path d="M 30 195 L 370 195 L 330 240 L 70 240 Z" fill="url(#woodGrad)" stroke="#9a3412" stroke-width="2"/>
+                        <line x1="40" y1="195" x2="360" y2="195" stroke="#f59e0b" stroke-width="2"/>
+
+                        <rect x="160" y="210" width="80" height="14" rx="3" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+                        <text x="200" y="221" text-anchor="middle" font-size="7" font-weight="bold" fill="#fbbf24" font-family="sans-serif">MS. - OSTERWICK</text>
+
+                        <!-- V-Shaped Rigging -->
+                        <line x1="200" y1="200" x2="100" y2="35" stroke="url(#woodGrad)" stroke-width="9" stroke-linecap="round"/>
+                        <line x1="200" y1="200" x2="300" y2="35" stroke="url(#woodGrad)" stroke-width="9" stroke-linecap="round"/>
+                        <line x1="100" y1="45" x2="300" y2="45" stroke="#78350f" stroke-width="4"/>
+
+                        <g id="dynamicFlags" class="cursor-pointer"></g>
+                    </svg>
+                `
+            },
+            2: {
+                story: "Im gefluteten Rumpf der MS. - Osterwick steht eine massive Druckschleuse mit drei Ventilen in V-Anordnung.",
+                graphics: `
+                    <svg viewBox="0 0 400 250" class="w-full h-full">
+                        <rect width="400" height="250" fill="#0f172a"/>
+                        <rect x="0" y="140" width="400" height="110" fill="#0284c7" opacity="0.6"/>
+                        <rect x="100" y="20" width="200" height="180" rx="10" fill="#334155" stroke="#475569" stroke-width="6"/>
+                        
+                        <path d="M 140 70 L 200 150 L 260 70" fill="none" stroke="#ca8a04" stroke-width="8"/>
+                        
+                        <!-- V Hints for Valves -->
+                        <text x="140" y="42" text-anchor="middle" font-size="9" font-weight="bold" fill="#f59e0b" font-family="monospace" letter-spacing="1" id="vHint1"></text>
+                        <text x="200" y="188" text-anchor="middle" font-size="9" font-weight="bold" fill="#f59e0b" font-family="monospace" letter-spacing="1" id="vHint2"></text>
+                        <text x="260" y="42" text-anchor="middle" font-size="9" font-weight="bold" fill="#f59e0b" font-family="monospace" letter-spacing="1" id="vHint3"></text>
+
+                        <circle cx="140" cy="70" r="18" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
+                        <circle cx="200" cy="150" r="18" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
+                        <circle cx="260" cy="70" r="18" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
+
+                        <text x="140" y="74" text-anchor="middle" font-size="12" font-weight="bold" fill="#fef08a" id="valDisp1">0</text>
+                        <text x="200" y="154" text-anchor="middle" font-size="12" font-weight="bold" fill="#fef08a" id="valDisp2">0</text>
+                        <text x="260" y="74" text-anchor="middle" font-size="12" font-weight="bold" fill="#fef08a" id="valDisp3">0</text>
+                    </svg>
+                `
+            },
+            3: {
+                story: "Ein gut lesbares, schweres Logbuch liegt geöffnet vor Hermann. Welcher Name entschlüsselt das Heimathafen-Protokoll?",
+                graphics: `
+                    <div class="w-full h-full relative flex items-center justify-center bg-slate-950 p-4">
+                        <!-- Highly Readable Logbook Content -->
+                        <div class="logbook-readable w-full h-full bg-amber-100/15 border border-amber-600/50 rounded-lg p-4 text-amber-100 text-xs font-serif leading-relaxed flex flex-col justify-between shadow-inner">
+                            <div>
+                                <p class="font-bold text-center mb-2 tracking-widest text-amber-300">MS. - OSTERWICK - LOGBUCH</p>
+                                <p class="text-slate-200">Sturmnacht im Münsterland... Die Wasser steigen unaufhaltsam... Der Kompass versagt...</p>
+                            </div>
+                            <p class="mt-2 italic text-amber-200/90">Position Unbekannt. Breiten- und Längengrade verwaschen im Regen, doch der Name des Schiffes bleibt bestehen.</p>
+                            <p class="font-mono text-center text-xs text-amber-400 font-bold tracking-widest">MS. - O S T E R W I C K</p>
+                        </div>
+                    </div>
+                `
+            },
+            4: {
+                story: "Zwei Scheinwerfer schneiden durch die Sturmnacht. Achte auf das Aufblitzen am Horizont! Richte die Lichtkegel auf die Gradzahlen.",
+                graphics: `
+                    <svg viewBox="0 0 400 250" class="w-full h-full">
+                        <rect width="400" height="250" fill="#030712"/>
+                        
+                        <!-- Stormy Cliff Silhouettes -->
+                        <path d="M 0 120 Q 50 110 90 160 L 90 250 L 0 250 Z" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+                        <path d="M 310 150 Q 350 100 400 110 L 400 250 L 310 250 Z" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+
+                        <path d="M 0 200 C 100 180, 200 220, 400 190 L 400 250 L 0 250 Z" fill="#0284c7" opacity="0.5"/>
+                        
+                        <!-- Lighthouse Tower -->
+                        <rect x="185" y="160" width="30" height="90" fill="#334155"/>
+                        <circle cx="200" cy="150" r="15" fill="#f59e0b" opacity="0.8"/>
+                        
+                        <!-- Light Beams -->
+                        <polygon id="beamA" points="200,150 50,20 100,20" fill="#38bdf8" opacity="0.35"/>
+                        <polygon id="beamB" points="200,150 300,20 350,20" fill="#f59e0b" opacity="0.35"/>
+
+                        <!-- Target Marker -->
+                        <circle cx="200" cy="40" r="12" fill="#065f46" stroke="#10b981" stroke-width="2"/>
+                        <text x="200" y="44" text-anchor="middle" font-size="8" font-weight="bold" fill="#ecfdf5">ZIEL</text>
+
+                        <!-- Lightning-revealed degree clues (FREI SCHWEBEND, OHNE RAHMEN, NUR SICHTBAR BEI BLITZ) -->
+                        <g class="lightning-text pointer-events-none">
+                            <text id="clueA" x="45" y="149" text-anchor="middle" font-size="22" font-weight="900" fill="#38bdf8" font-family="'JetBrains Mono', monospace"></text>
+                            <text id="clueB" x="355" y="149" text-anchor="middle" font-size="22" font-weight="900" fill="#f59e0b" font-family="'JetBrains Mono', monospace"></text>
+                        </g>
+                    </svg>
+                `
+            }
+        };
+
+        function renderStage() {
+            const st = STAGES[currentStage];
+            document.getElementById('storyText').innerHTML = `<p>${st.story}</p>`;
+            document.getElementById('sceneGraphics').innerHTML = st.graphics;
+
+            if (currentStage === 1) {
+                updateStage1Graphics();
+            } else if (currentStage === 2) {
+                document.getElementById('vHint1').textContent = getVString(puzzleState.stg2.target1);
+                document.getElementById('vHint2').textContent = getVString(puzzleState.stg2.target2);
+                document.getElementById('vHint3').textContent = getVString(puzzleState.stg2.target3);
+            } else if (currentStage === 4) {
+                document.getElementById('clueA').textContent = puzzleState.stg4.targetA + '°';
+                document.getElementById('clueB').textContent = puzzleState.stg4.targetB + '°';
+            }
+
+            renderPuzzleControls();
+        }
+
+        function updateStage1Graphics() {
+            const flagsContainer = document.getElementById('dynamicFlags');
+            if (!flagsContainer) return;
+
+            const flags = puzzleState.stg1.flags;
+            const flagColors = ['#0284c7', '#f59e0b', '#10b981', '#ef4444'];
+            const textColors = ['#ffffff', '#0f172a', '#ffffff', '#ffffff'];
+            const positions = [
+                { x: 115, y: 45 },
+                { x: 160, y: 45 },
+                { x: 205, y: 45 },
+                { x: 250, y: 45 }
+            ];
+
+            let html = '';
+            flags.forEach((letter, i) => {
+                const pos = positions[i];
+                const bg = flagColors[i % flagColors.length];
+                const tc = textColors[i % textColors.length];
+                html += `
+                    <g transform="translate(${pos.x}, ${pos.y})">
+                        <polygon points="0,0 35,10 0,20" fill="${bg}" stroke="#ffffff" stroke-width="1"/>
+                        <text x="10" y="13" font-size="11" font-weight="bold" font-family="sans-serif" fill="${tc}">${letter}</text>
+                    </g>
+                `;
+            });
+            flagsContainer.innerHTML = html;
+        }
+
+        function renderPuzzleControls() {
+            const panel = document.getElementById('puzzlePanel');
+            if (!panel) return;
+            panel.innerHTML = '';
+
+            if (currentStage === 0) {
+                panel.innerHTML = `
+                    <div class="w-full flex flex-col items-center gap-2">
+                        <button onclick="startDream()" class="w-full py-3.5 px-6 bg-gradient-to-r from-amber-600 via-cyan-600 to-teal-600 hover:from-amber-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-xl flex items-center justify-center gap-2 transition-all transform active:scale-95 font-cinzel text-base">
+                            <i class="fa-solid fa-moon text-amber-300"></i>
+                            <span>Traum betreten</span>
+                        </button>
+                    </div>
+                `;
+            } else if (currentStage === 1) {
+                const currentArr = puzzleState.stg1.flags;
+                panel.innerHTML = `
+                    <div class="w-full flex flex-col items-center gap-2">
+                        <div class="flex items-center justify-center gap-2 flex-wrap">
+                            ${currentArr.map((letter, idx) => `
+                                <button onclick="rotateFlag(${idx})" class="w-12 h-12 bg-slate-800 hover:bg-slate-700 active:bg-cyan-900 border-2 border-cyan-500/80 rounded-xl text-amber-300 font-bold text-lg shadow-lg transition-all active:scale-95 flex items-center justify-center">
+                                    ${letter}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (currentStage === 2) {
+                const p = puzzleState.stg2;
+                panel.innerHTML = `
+                    <div class="w-full flex flex-col items-center gap-2">
+                        <div class="flex items-center justify-center gap-4">
+                            <div class="flex flex-col items-center gap-1">
+                                <button onclick="adjustValve(1)" class="w-12 h-12 bg-slate-800 hover:bg-slate-700 active:bg-cyan-900 border-2 border-amber-500/80 rounded-xl text-amber-300 font-bold text-lg shadow-lg transition-all active:scale-95 flex items-center justify-center font-code">
+                                    ${p.v1}
+                                </button>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <button onclick="adjustValve(2)" class="w-12 h-12 bg-slate-800 hover:bg-slate-700 active:bg-cyan-900 border-2 border-amber-500/80 rounded-xl text-amber-300 font-bold text-lg shadow-lg transition-all active:scale-95 flex items-center justify-center font-code">
+                                    ${p.v2}
+                                </button>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <button onclick="adjustValve(3)" class="w-12 h-12 bg-slate-800 hover:bg-slate-700 active:bg-cyan-900 border-2 border-amber-500/80 rounded-xl text-amber-300 font-bold text-lg shadow-lg transition-all active:scale-95 flex items-center justify-center font-code">
+                                    ${p.v3}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (currentStage === 3) {
+                panel.innerHTML = `
+                    <div class="w-full flex flex-col items-center gap-2">
+                        <div class="w-full max-w-sm flex items-center justify-center bg-slate-950 border-2 border-cyan-600/80 rounded-xl px-4 py-2.5 shadow-inner min-h-[46px]" id="displayInputBox">
+                            <span id="typedCodeDisplay" class="font-code text-sm sm:text-base text-amber-300 uppercase tracking-widest min-h-[20px] flex items-center"></span>
+                        </div>
+
+                        <div class="w-full max-w-md bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 flex flex-col gap-1.5 shadow-xl mt-1">
+                            <div class="flex justify-center gap-1">
+                                ${['Q','W','E','R','T','Z','U','I','O','P'].map(l => `<button onclick="typeKey('${l}')" class="retro-key w-8 sm:w-9 h-9 rounded-lg text-amber-300 font-code font-bold text-xs sm:text-sm flex items-center justify-center">${l}</button>`).join('')}
+                            </div>
+                            <div class="flex justify-center gap-1">
+                                ${['A','S','D','F','G','H','J','K','L'].map(l => `<button onclick="typeKey('${l}')" class="retro-key w-8 sm:w-9 h-9 rounded-lg text-amber-300 font-code font-bold text-xs sm:text-sm flex items-center justify-center">${l}</button>`).join('')}
+                            </div>
+                            <div class="flex justify-center gap-1">
+                                ${['Y','X','C','V','B','N','M'].map(l => `<button onclick="typeKey('${l}')" class="retro-key w-8 sm:w-9 h-9 rounded-lg text-amber-300 font-code font-bold text-xs sm:text-sm flex items-center justify-center">${l}</button>`).join('')}
+                            </div>
+                            <div class="flex justify-center gap-1.5 pt-1">
+                                <button onclick="typeKey(' ')" class="retro-key px-4 h-9 rounded-lg text-slate-300 font-code text-[11px] font-bold flex items-center justify-center">LEERZEICHEN</button>
+                                <button onclick="typeKey('-')" class="retro-key w-10 h-9 rounded-lg text-slate-300 font-code font-bold text-xs flex items-center justify-center">-</button>
+                                <button onclick="typeKey('.')" class="retro-key w-9 h-9 rounded-lg text-slate-300 font-code font-bold text-xs flex items-center justify-center">.</button>
+                                <button onclick="deleteKey()" class="retro-key px-3 h-9 rounded-lg text-red-400 font-code text-xs font-bold flex items-center justify-center gap-1"><i class="fa-solid fa-delete-left"></i></button>
+                                <button onclick="checkCode()" class="retro-key px-4 h-9 rounded-lg bg-cyan-950/80 border-cyan-600 text-cyan-200 font-code text-xs font-bold flex items-center justify-center gap-1"><i class="fa-solid fa-check"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                updateTypedDisplay();
+            } else if (currentStage === 4) {
+                const p = puzzleState.stg4;
+                panel.innerHTML = `
+                    <div class="w-full flex flex-col items-center gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                            <div class="bg-slate-950/80 p-2 rounded-xl border border-cyan-800/60 flex flex-col items-center">
+                                <span class="text-[11px] font-semibold text-cyan-300 mb-1">Breitengrad: <strong class="text-amber-300 font-code">${p.angleA}°</strong></span>
+                                <div class="flex items-center gap-2 w-full justify-center">
+                                    <button onclick="changeBeam('A', -1)" class="w-9 h-9 bg-slate-800 active:bg-cyan-900 border border-cyan-600 rounded-lg text-cyan-200 font-bold text-lg flex items-center justify-center shadow">-</button>
+                                    <div class="flex-grow bg-slate-800 h-2 rounded-full overflow-hidden max-w-[100px] pointer-events-none">
+                                        <div class="bg-cyan-400 h-full" style="width: ${(p.angleA / 90) * 100}%"></div>
+                                    </div>
+                                    <button onclick="changeBeam('A', 1)" class="w-9 h-9 bg-slate-800 active:bg-cyan-900 border border-cyan-600 rounded-lg text-cyan-200 font-bold text-lg flex items-center justify-center shadow">+</button>
+                                </div>
+                            </div>
+                            <div class="bg-slate-950/80 p-2 rounded-xl border border-cyan-800/60 flex flex-col items-center">
+                                <span class="text-[11px] font-semibold text-amber-300 mb-1">Längengrad: <strong class="text-amber-300 font-code">${p.angleB}°</strong></span>
+                                <div class="flex items-center gap-2 w-full justify-center">
+                                    <button onclick="changeBeam('B', -1)" class="w-9 h-9 bg-slate-800 active:bg-cyan-900 border border-cyan-600 rounded-lg text-cyan-200 font-bold text-lg flex items-center justify-center shadow">-</button>
+                                    <div class="flex-grow bg-slate-800 h-2 rounded-full overflow-hidden max-w-[100px] pointer-events-none">
+                                        <div class="bg-amber-400 h-full" style="width: ${(p.angleB / 90) * 100}%"></div>
+                                    </div>
+                                    <button onclick="changeBeam('B', 1)" class="w-9 h-9 bg-slate-800 active:bg-cyan-900 border border-cyan-600 rounded-lg text-cyan-200 font-bold text-lg flex items-center justify-center shadow">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                setTimeout(updateLighthouseBeams, 50);
+            }
+        }
+
+        window.startDream = function() {
+            audio.init();
+            audio.muted = false;
+            document.getElementById('soundIcon').className = 'fa-solid fa-volume-high text-cyan-400';
+            audio.startAmbientMusic();
+            audio.playClick();
+            currentStage = 1;
+            renderStage();
+        };
+
+        window.typeKey = function(char) {
+            audio.init();
+            audio.playClick();
+            if (puzzleState.stg3.inputCode.length < 25) {
+                puzzleState.stg3.inputCode += char;
+                updateTypedDisplay();
+            }
+        };
+
+        window.deleteKey = function() {
+            audio.init();
+            audio.playClick();
+            if (puzzleState.stg3.inputCode.length > 0) {
+                puzzleState.stg3.inputCode = puzzleState.stg3.inputCode.slice(0, -1);
+                updateTypedDisplay();
+            }
+        };
+
+        function updateTypedDisplay() {
+            const displayEl = document.getElementById('typedCodeDisplay');
+            if (displayEl) {
+                displayEl.textContent = puzzleState.stg3.inputCode || '...';
+            }
+        }
+
+        window.rotateFlag = function(idx) {
+            audio.init();
+            audio.playClick();
+            const flags = puzzleState.stg1.flags;
+            const nextIdx = (idx + 1) % flags.length;
+            const temp = flags[idx];
+            flags[idx] = flags[nextIdx];
+            flags[nextIdx] = temp;
+
+            renderPuzzleControls();
+            updateStage1Graphics();
+            checkStage1Win();
+        };
+
+        window.adjustValve = function(num) {
+            audio.init();
+            audio.playClick();
+            if (num === 1) puzzleState.stg2.v1 = (puzzleState.stg2.v1 + 1) % 10;
+            if (num === 2) puzzleState.stg2.v2 = (puzzleState.stg2.v2 + 1) % 10;
+            if (num === 3) puzzleState.stg2.v3 = (puzzleState.stg2.v3 + 1) % 10;
+
+            const d1 = document.getElementById('valDisp1');
+            const d2 = document.getElementById('valDisp2');
+            const d3 = document.getElementById('valDisp3');
+            if (d1) d1.textContent = puzzleState.stg2.v1;
+            if (d2) d2.textContent = puzzleState.stg2.v2;
+            if (d3) d3.textContent = puzzleState.stg2.v3;
+
+            renderPuzzleControls();
+            checkStage2Win();
+        };
+
+        window.checkCode = function() {
+            audio.init();
+            const rawVal = puzzleState.stg3.inputCode.toUpperCase();
+            const sanitized = rawVal.replace(/[^A-Z]/g, '');
+
+            const boxEl = document.getElementById('displayInputBox');
+
+            if (sanitized.includes('OSTERWICK')) {
+                audio.playSolve();
+                puzzleState.stg3.solved = true;
+
+                if (boxEl) {
+                    boxEl.classList.remove('border-cyan-600/80');
+                    boxEl.classList.add('border-emerald-500', 'bg-emerald-950/40');
+                }
+
+                setTimeout(() => {
+                    currentStage = 4;
+                    renderStage();
+                }, 800);
+            } else {
+                audio.playError();
+                if (boxEl) {
+                    boxEl.classList.add('border-red-500', 'animate-shake');
+                    setTimeout(() => boxEl.classList.remove('border-red-500', 'animate-shake'), 600);
+                }
+            }
+        };
+
+        window.changeBeam = function(beam, delta) {
+            audio.init();
+            audio.playClick();
+            if (beam === 'A') {
+                puzzleState.stg4.angleA = Math.max(0, Math.min(90, puzzleState.stg4.angleA + delta));
+            } else if (beam === 'B') {
+                puzzleState.stg4.angleB = Math.max(0, Math.min(90, puzzleState.stg4.angleB + delta));
+            }
+            renderPuzzleControls();
+            updateLighthouseBeams();
+            checkStage4Win();
+        };
+
+        window.updateLighthouseBeams = function() {
+            const beamA = document.getElementById('beamA');
+            const beamB = document.getElementById('beamB');
+            
+            if (beamA) {
+                const radA = (puzzleState.stg4.angleA - 45) * (Math.PI / 180);
+                const x1A = 200 + Math.sin(radA - 0.15) * 180;
+                const x2A = 200 + Math.sin(radA + 0.15) * 180;
+                const yA = 150 - Math.cos(radA) * 180;
+                beamA.setAttribute('points', `200,150 ${x1A},${yA} ${x2A},${yA}`);
+            }
+
+            if (beamB) {
+                const radB = (puzzleState.stg4.angleB - 45) * (Math.PI / 180);
+                const x1B = 200 + Math.sin(radB - 0.15) * 180;
+                const x2B = 200 + Math.sin(radB + 0.15) * 180;
+                const yB = 150 - Math.cos(radB) * 180;
+                beamB.setAttribute('points', `200,150 ${x1B},${yB} ${x2B},${yB}`);
+            }
+        };
+
+        function checkStage1Win() {
+            const current = puzzleState.stg1.flags.join('');
+            const target = puzzleState.stg1.target.join('');
+            if (current === target && !puzzleState.stg1.solved) {
+                puzzleState.stg1.solved = true;
+                audio.playSolve();
+
+                setTimeout(() => {
+                    currentStage = 2;
+                    renderStage();
+                }, 1000);
+            }
+        }
+
+        function checkStage2Win() {
+            const p = puzzleState.stg2;
+            if (p.v1 === p.target1 && p.v2 === p.target2 && p.v3 === p.target3 && !p.solved) {
+                p.solved = true;
+                audio.playSolve();
+
+                setTimeout(() => {
+                    currentStage = 3;
+                    renderStage();
+                }, 1000);
+            }
+        }
+
+        function checkStage4Win() {
+            if (puzzleState.stg4.angleA === puzzleState.stg4.targetA && puzzleState.stg4.angleB === puzzleState.stg4.targetB && !puzzleState.stg4.solved) {
+                audio.playSolve();
+                puzzleState.stg4.solved = true;
+
+                setTimeout(() => {
+                    document.getElementById('victoryModal').classList.remove('hidden');
+                }, 800);
+            }
+        }
+
+        window.copyCertitudeLink = function() {
+            audio.init();
+            audio.playClick();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(CERTITUDE_URL).then(() => {
+                    showToast("Checker-Link kopiert!");
+                }).catch(() => {
+                    fallbackCopyText(CERTITUDE_URL);
+                });
+            } else {
+                fallbackCopyText(CERTITUDE_URL);
+            }
+        };
+
+        function fallbackCopyText(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast("Checker-Link kopiert!");
+            } catch (err) {
+                showToast("Fehler beim Kopieren");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toastMsg');
+            if (toast && msgEl) {
+                msgEl.textContent = msg;
+                toast.classList.remove('hidden');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 2500);
+            }
+        }
+
+        function initGame() {
+            currentStage = 0;
+            randomizePuzzleValues();
+            puzzleState.stg1 = { flags: ['C', 'W', 'K', 'I'], target: ['W', 'I', 'C', 'K'], solved: false };
+            puzzleState.stg2.v1 = 0; puzzleState.stg2.v2 = 0; puzzleState.stg2.v3 = 0; puzzleState.stg2.solved = false;
+            puzzleState.stg3 = { inputCode: '', solved: false };
+            puzzleState.stg4.angleA = 10; puzzleState.stg4.angleB = 70; puzzleState.stg4.solved = false;
+
+            renderStage();
+        }
+
+        document.getElementById('btnSound').addEventListener('click', () => {
+            audio.init();
+            audio.muted = !audio.muted;
+            document.getElementById('soundIcon').className = audio.muted ? 'fa-solid fa-volume-xmark text-slate-500' : 'fa-solid fa-volume-high text-cyan-400';
+            if (audio.muted) {
+                audio.stopAmbientMusic();
+            } else {
+                audio.startAmbientMusic();
+            }
+        });
+
+        document.getElementById('btnReset').addEventListener('click', () => {
+            audio.init();
+            initGame();
+        });
+
+        document.getElementById('btnPlayAgain').addEventListener('click', () => {
+            document.getElementById('victoryModal').classList.add('hidden');
+            initGame();
+        });
+
+        window.onload = function() {
+            initGame();
+        };
+    </script>
+</body>
+</html>
