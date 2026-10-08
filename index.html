@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>V</title>
+    <title>MS. - Osterwick V</title>
     
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -93,6 +91,58 @@
             border-color: #06b6d4;
         }
 
+        /* Continuous water rise animation for the gauge */
+        @keyframes waterRise {
+            0% { transform: translateY(100%); }
+            50% { transform: translateY(40%); }
+            100% { transform: translateY(15%); }
+        }
+
+        .water-gauge-fill {
+            animation: waterRise 12s ease-in-out infinite alternate, waterLevelPulse 3.5s ease-in-out infinite;
+        }
+
+        /* Smooth fade pulse animation for the water level text and scale numbers */
+        @keyframes waterLevelPulse {
+            0%, 100% { opacity: 0.3; filter: brightness(0.8); }
+            50% { opacity: 1; filter: brightness(1.3) drop-shadow(0 0 6px rgba(56, 189, 248, 0.8)); }
+        }
+
+        .gauge-fade-numbers {
+            animation: waterLevelPulse 3.5s ease-in-out infinite;
+        }
+
+        /* Fullscreen rising water flood animation between stages */
+        @keyframes floodSurge {
+            0% { transform: translateY(100%); opacity: 0; }
+            30% { transform: translateY(40%); opacity: 0.85; }
+            70% { transform: translateY(10%); opacity: 0.9; }
+            100% { transform: translateY(-100%); opacity: 0; }
+        }
+
+        .flood-overlay {
+            animation: floodSurge 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        /* Traum-Symbole Animation */
+        @keyframes dreamFlutter {
+            0% { transform: translateY(100vh) translateX(0px) rotate(0deg) scale(0.5); opacity: 0; }
+            10% { opacity: 0.8; filter: blur(0px); }
+            50% { transform: translateY(40vh) translateX(var(--drift)) rotate(180deg) scale(var(--scale-max)); }
+            90% { opacity: 0.8; filter: blur(1px); }
+            100% { transform: translateY(-20vh) translateX(calc(var(--drift) * -1)) rotate(360deg) scale(0.8); opacity: 0; }
+        }
+
+        .dream-symbol {
+            position: fixed;
+            pointer-events: none;
+            z-index: 60; /* Über der Flut-Animation */
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            text-shadow: 0 0 15px currentColor;
+            animation: dreamFlutter forwards ease-in-out;
+        }
+
         ::-webkit-scrollbar {
             width: 5px;
         }
@@ -116,8 +166,19 @@
         ===================================================================
     -->
 
-    <!-- Lightning Overlay FX -->
     <div class="lightning-overlay fixed inset-0 bg-cyan-100 pointer-events-none z-40"></div>
+
+    <!-- Fullscreen Rising Water Animation Overlay -->
+    <div id="floodAnimationOverlay" class="fixed inset-0 z-50 pointer-events-none hidden overflow-hidden flex flex-col justify-end">
+        <div class="w-full h-full bg-gradient-to-t from-cyan-600 via-teal-700 to-cyan-900/90 flood-overlay relative flex flex-col items-center justify-end pb-24 shadow-2xl border-t-4 border-cyan-300">
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-400/30 via-transparent to-slate-950/65"></div>
+            <div class="relative z-10 text-center px-4">
+                <i class="fa-solid fa-water text-5xl text-cyan-200 animate-bounce mb-3 drop-shadow-[0_0_15px_rgba(56,189,248,0.8)]"></i>
+                <h2 id="floodAlertTitle" class="font-cinzel text-xl sm:text-2xl font-bold text-cyan-100 tracking-wider drop-shadow-md">WASSERSTAND STEIGT!</h2>
+                <p id="floodAlertMeter" class="font-code text-amber-300 font-extrabold text-lg mt-1 tracking-widest drop-shadow-md">+4.5m Ü.NN</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Header Bar -->
     <header class="w-full p-3 bg-slate-900/90 border-b border-cyan-900/60 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between shadow-xl">
@@ -142,13 +203,39 @@
         </div>
     </header>
 
-    <!-- Main Content Viewport -->
     <main class="flex-grow flex flex-col items-center justify-start p-3 max-w-xl mx-auto w-full gap-3">
         
         <!-- SVG Interactive Graphic -->
         <div id="sceneViewport" class="w-full aspect-[16/10] bg-slate-950 border-2 border-cyan-800/80 rounded-2xl relative overflow-hidden shadow-2xl flex items-center justify-center group">
             <div id="sceneGraphics" class="w-full h-full relative">
                 <!-- SVG Visuals rendered via JS -->
+            </div>
+        </div>
+
+        <!-- Animated Pegelstange (Water Gauge) Component -->
+        <div class="w-full bg-slate-900/90 border border-cyan-900/60 rounded-2xl p-3 shadow-xl flex items-center gap-3">
+            <div class="flex flex-col items-center justify-center">
+                <span class="text-[10px] font-bold text-cyan-400 font-cinzel uppercase tracking-wider">Pegel</span>
+                <i class="fa-solid fa-water text-cyan-500 text-xs mt-0.5 animate-pulse"></i>
+            </div>
+            
+            <!-- Gauge Bar Container -->
+            <div class="flex-grow relative h-6 bg-slate-950 border border-cyan-800/70 rounded-lg overflow-hidden flex items-center px-2">
+                <!-- Rising Water Fill -->
+                <div class="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-900/80 via-teal-700/80 to-cyan-500/80 water-gauge-fill w-full"></div>
+                
+                <!-- Scale markers up to 8m maximum mark with fade animation -->
+                <div class="absolute inset-0 flex justify-between items-center px-3 pointer-events-none gauge-fade-numbers">
+                    <span class="text-[9px] font-code text-cyan-200">0m</span>
+                    <span class="text-[9px] font-code text-cyan-200">2.0m</span>
+                    <span class="text-[9px] font-code text-cyan-200">4.0m</span>
+                    <span class="text-[9px] font-code text-cyan-200">6.0m</span>
+                    <span class="text-[9px] font-code text-cyan-200">8.0m</span>
+                </div>
+            </div>
+
+            <div class="text-right min-w-[50px]">
+                <span id="waterLevelText" class="font-code text-xs text-amber-400 font-bold gauge-fade-numbers">+2.0m</span>
             </div>
         </div>
 
@@ -166,19 +253,31 @@
 
     </main>
 
-    <!-- Victory Modal -->
     <div id="victoryModal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4 overflow-y-auto">
-        <div class="max-w-sm w-full bg-slate-900 border-2 border-cyan-500 rounded-2xl p-6 text-center shadow-2xl relative my-auto">
+        <div class="max-w-lg w-full bg-slate-900 border-2 border-cyan-500 rounded-2xl p-6 text-center shadow-2xl relative my-auto my-6">
             <div class="w-16 h-16 bg-gradient-to-tr from-amber-500 via-cyan-500 to-teal-400 text-slate-950 rounded-2xl flex items-center justify-center mx-auto mb-3 text-3xl font-bold shadow-lg shadow-cyan-500/30 animate-bounce">
                 <i class="fa-solid fa-anchor"></i>
             </div>
             
             <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-900/80 text-emerald-300 border border-emerald-500/40 uppercase tracking-widest mb-2 inline-block">
-                Geocaching Gehemnis
+                Geocaching Geheimnis
             </span>
             
             <h2 class="text-2xl font-cinzel font-bold text-white mb-2">V</h2>
             <p class="font-serif-story text-slate-300 italic text-sm mb-4">„Traum entschlüsselt, oder?“</p>
+
+            <!-- Mystischer Textaufruf auf dem Zielbildschirm -->
+            <div class="bg-slate-950/80 border border-cyan-900/80 rounded-xl p-4 mb-5 text-left text-xs sm:text-sm font-serif-story text-slate-300 leading-relaxed space-y-3 max-h-64 overflow-y-auto shadow-inner">
+                <p>
+                    Hört her, ihr verirrten Seelen! Das Bild, das euch aus diesem Listing entgegenstarrt, ist ein reines Schreckgespenst – eine düstere, unheimliche Fratze, bei deren Anblick eisige Kälte durch eure Glieder kriecht und euch den Atem raubt.
+                </p>
+                <p>
+                    Doch dieses schauerliche Schemen an der Oberfläche ist nur ein Schleier aus Nebel. Das eigentliche Geheimnis ruht tief darunter im Schattenreich. Eure wahre Bewährungsprobe besteht darin, euch nicht vom Schrecken dieser Erscheinung lähmen zu lassen, sondern herauszufinden, was sich direkt hinter diesem verfluchten Bild verbirgt.
+                </p>
+                <p>
+                    Lasst euch von den schemenhaften Umrissen an der Oberfläche nicht täuschen. Durchdringt den Geisternebel, greift mit wachsamen Tasten hinter die verblichene Leinwand und schaut in die Finsternis dahinter. Welcher verlassene Kurs, welches vergessene Rätsel, welche verborgene Koordinate spukt dort im toten Winkel? Überwindet das Frösteln, setzt den Verstand auf Vollzeug und entlockt diesem Geisterbild sein wohlgehütestes Geheimnis!
+                </p>
+            </div>
 
             <!-- Action Buttons -->
             <div class="space-y-3 mt-4">
@@ -189,7 +288,6 @@
                     <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-70"></i>
                 </a>
 
-                <!-- Copy Link Button -->
                 <button onclick="copyCertitudeLink()" class="w-full py-2.5 px-3 bg-slate-800 hover:bg-slate-700 active:bg-cyan-900 border border-slate-700 text-cyan-300 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors">
                     <i class="fa-solid fa-copy"></i>
                     <span>Checker-Link kopieren</span>
@@ -219,9 +317,12 @@
             }
             init() {
                 if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
                 }
-                if (this.ctx.state === 'suspended') {
+                if (this.ctx && this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
             }
@@ -244,7 +345,7 @@
                 if (this.muted || !this.ctx) return;
                 try {
                     const now = this.ctx.currentTime;
-                    const freqs = [65.41, 98.00, 116.54, 155.56]; // C2, G2, D#3, D#3
+                    const freqs = [65.41, 98.00, 116.54, 155.56];
                     
                     freqs.forEach(freq => {
                         const osc = this.ctx.createOscillator();
@@ -331,20 +432,29 @@
 
         const audio = new WebAudioFX();
 
-        let currentStage = 0; // 0 = Title Screen (Hermann träumt)
+        let currentStage = 0;
 
         let puzzleState = {
             stg1: { flags: ['C', 'W', 'K', 'I'], target: ['W', 'I', 'C', 'K'], solved: false },
-            stg2: { v1: 0, v2: 0, v3: 0, target1: 5, target2: 8, target3: 5, solved: false },
-            stg3: { inputCode: '', solved: false },
+            stg2: { v1: 0, v2: 0, v3: 0, targetV1: 5, targetV2: 8, targetV3: 5, solved: false },
+            stg3: { inputCode: '', letters: [], solved: false },
             stg4: { angleA: 10, angleB: 70, targetA: 51, targetB: 7, solved: false }
         };
 
-        function randomizePuzzleValues() {
-            puzzleState.stg2.target1 = Math.floor(Math.random() * 9) + 1;
-            puzzleState.stg2.target2 = Math.floor(Math.random() * 9) + 1;
-            puzzleState.stg2.target3 = Math.floor(Math.random() * 9) + 1;
+        function shuffleArray(arr) {
+            const array = [...arr];
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
 
+        function randomizePuzzleValues() {
+            puzzleState.stg2.targetV1 = Math.floor(Math.random() * 9) + 1;
+            puzzleState.stg2.targetV2 = Math.floor(Math.random() * 9) + 1;
+            puzzleState.stg2.targetV3 = Math.floor(Math.random() * 9) + 1;
+            puzzleState.stg3.letters = shuffleArray(['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']);
             puzzleState.stg4.targetA = Math.floor(Math.random() * 85) + 3;
             puzzleState.stg4.targetB = Math.floor(Math.random() * 85) + 3;
         }
@@ -371,33 +481,21 @@
                         </defs>
                         <rect width="400" height="250" fill="url(#dreamGrad)"/>
                         
-                        <!-- Atmospheric moon / glow -->
                         <circle cx="200" cy="95" r="55" fill="#1e293b" opacity="0.4"/>
                         <circle cx="200" cy="95" r="35" fill="#334155" opacity="0.3"/>
                         <text x="200" y="162" text-anchor="middle" font-size="11" font-weight="bold" fill="#64748b" font-family="'JetBrains Mono', monospace" letter-spacing="3">VERSION 2</text>
 
-                        <!-- Zweimaster (Two-masted sailing ship) silhouette on rough dream waves -->
                         <g transform="translate(145, 110)">
-                            <!-- Hull -->
                             <path d="M 10 40 Q 55 52 100 40 L 85 55 Q 55 60 25 55 Z" fill="url(#hullGrad)" stroke="#38bdf8" stroke-width="0.8"/>
-                            <!-- Mast 1 (Fore) -->
                             <line x1="35" y1="42" x2="35" y2="5" stroke="#94a3b8" stroke-width="2"/>
-                            <!-- Mast 2 (Main) -->
                             <line x1="75" y1="40" x2="75" y2="-2" stroke="#94a3b8" stroke-width="2.5"/>
-                            <!-- Sails -->
                             <path d="M 35 10 Q 50 20 35 30 Z" fill="#64748b" opacity="0.7"/>
                             <path d="M 75 5 Q 95 18 75 32 Z" fill="#64748b" opacity="0.7"/>
-                            <path d="M 35 15 Q 20 22 35 32 Z" fill="#475569" opacity="0.6"/>
-                            <!-- Rigging lines -->
-                            <line x1="10" y1="42" x2="35" y2="5" stroke="#64748b" stroke-width="0.5"/>
-                            <line x1="75" y1="-2" x2="100" y2="40" stroke="#64748b" stroke-width="0.5"/>
                         </g>
 
-                        <!-- Storm waves under ship -->
                         <path d="M 0 160 Q 100 145 200 160 T 400 160 L 400 250 L 0 250 Z" fill="#032b43" opacity="0.5"/>
                         <path d="M 0 175 Q 120 160 250 178 T 400 170 L 400 250 L 0 250 Z" fill="#020617" opacity="0.8"/>
 
-                        <!-- Central V Emblem -->
                         <text x="200" y="75" text-anchor="middle" font-size="38" font-weight="900" fill="#f59e0b" font-family="'Cinzel', serif" filter="drop-shadow(0 0 12px rgba(245, 158, 11, 0.7))">V</text>
                         
                         <text x="200" y="198" text-anchor="middle" font-size="11" font-weight="bold" fill="#38bdf8" font-family="'JetBrains Mono', monospace" letter-spacing="2">MS. - OSTERWICK</text>
@@ -435,7 +533,6 @@
                         <rect x="160" y="210" width="80" height="14" rx="3" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
                         <text x="200" y="221" text-anchor="middle" font-size="7" font-weight="bold" fill="#fbbf24" font-family="sans-serif">MS. - OSTERWICK</text>
 
-                        <!-- V-Shaped Rigging -->
                         <line x1="200" y1="200" x2="100" y2="35" stroke="url(#woodGrad)" stroke-width="9" stroke-linecap="round"/>
                         <line x1="200" y1="200" x2="300" y2="35" stroke="url(#woodGrad)" stroke-width="9" stroke-linecap="round"/>
                         <line x1="100" y1="45" x2="300" y2="45" stroke="#78350f" stroke-width="4"/>
@@ -445,42 +542,48 @@
                 `
             },
             2: {
-                story: "Im gefluteten Rumpf der MS. - Osterwick steht eine massive Druckschleuse mit drei Ventilen in V-Anordnung.",
+                story: "Im gefluteten Rumpf der MS. - Osterwick steht eine massive Druckschleuse. Justiere die Ventile in der V-Anordnung.",
                 graphics: `
                     <svg viewBox="0 0 400 250" class="w-full h-full">
-                        <rect width="400" height="250" fill="#0f172a"/>
-                        <rect x="0" y="140" width="400" height="110" fill="#0284c7" opacity="0.6"/>
-                        <rect x="100" y="20" width="200" height="180" rx="10" fill="#334155" stroke="#475569" stroke-width="6"/>
-                        
-                        <path d="M 140 70 L 200 150 L 260 70" fill="none" stroke="#ca8a04" stroke-width="8"/>
-                        
-                        <!-- V Hints for Valves -->
-                        <text x="140" y="42" text-anchor="middle" font-size="9" font-weight="bold" fill="#f59e0b" font-family="monospace" letter-spacing="1" id="vHint1"></text>
-                        <text x="200" y="188" text-anchor="middle" font-size="9" font-weight="bold" fill="#f59e0b" font-family="monospace" letter-spacing="1" id="vHint2"></text>
-                        <text x="260" y="42" text-anchor="middle" font-size="9" font-weight="bold" fill="#f59e0b" font-family="monospace" letter-spacing="1" id="vHint3"></text>
+                        <defs>
+                            <linearGradient id="wallGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#0f172a"/>
+                                <stop offset="100%" stop-color="#020617"/>
+                            </linearGradient>
+                        </defs>
+                        <rect width="400" height="250" fill="url(#wallGrad)"/>
+                        <rect x="110" y="35" width="180" height="150" rx="10" fill="#1e293b" stroke="#334155" stroke-width="3" opacity="0.95"/>
+                        <text x="200" y="55" text-anchor="middle" font-size="9" font-weight="bold" fill="#38bdf8" font-family="'JetBrains Mono', monospace" letter-spacing="1">DRUCKSCHLEUSE</text>
 
-                        <circle cx="140" cy="70" r="18" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
-                        <circle cx="200" cy="150" r="18" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
-                        <circle cx="260" cy="70" r="18" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
+                        <circle cx="160" cy="90" r="16" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
+                        <circle cx="200" cy="140" r="16" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
+                        <circle cx="240" cy="90" r="16" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5"/>
 
-                        <text x="140" y="74" text-anchor="middle" font-size="12" font-weight="bold" fill="#fef08a" id="valDisp1">0</text>
-                        <text x="200" y="154" text-anchor="middle" font-size="12" font-weight="bold" fill="#fef08a" id="valDisp2">0</text>
-                        <text x="260" y="74" text-anchor="middle" font-size="12" font-weight="bold" fill="#fef08a" id="valDisp3">0</text>
+                        <text x="160" y="94" text-anchor="middle" font-size="12" font-weight="bold" fill="#fef08a" id="valDisp1">0</text>
+                        <text x="200" y="144" text-anchor="middle" font-size="12" font-weight="bold" fill="#fef08a" id="valDisp2">0</text>
+                        <text x="240" y="94" text-anchor="middle" font-size="12" font-weight="bold" fill="#fef08a" id="valDisp3">0</text>
+
+                        <text x="160" y="70" text-anchor="middle" font-size="8" font-weight="bold" fill="#38bdf8" id="vHint1">V</text>
+                        <text x="200" y="120" text-anchor="middle" font-size="8" font-weight="bold" fill="#38bdf8" id="vHint2">V</text>
+                        <text x="240" y="70" text-anchor="middle" font-size="8" font-weight="bold" fill="#38bdf8" id="vHint3">V</text>
                     </svg>
                 `
             },
             3: {
-                story: "Ein gut lesbares, schweres Logbuch liegt geöffnet vor Hermann. Welcher Name entschlüsselt das Heimathafen-Protokoll?",
+                story: "Ein zerrissenes, durchweichtes Logbuch liegt vor dir im modrigen Schlamm. Die Tinte ist fast völlig verschwommen.",
                 graphics: `
                     <div class="w-full h-full relative flex items-center justify-center bg-slate-950 p-4">
-                        <!-- Highly Readable Logbook Content -->
-                        <div class="logbook-readable w-full h-full bg-amber-100/15 border border-amber-600/50 rounded-lg p-4 text-amber-100 text-xs font-serif leading-relaxed flex flex-col justify-between shadow-inner">
-                            <div>
-                                <p class="font-bold text-center mb-2 tracking-widest text-amber-300">MS. - OSTERWICK - LOGBUCH</p>
-                                <p class="text-slate-200">Sturmnacht im Münsterland... Die Wasser steigen unaufhaltsam... Der Kompass versagt...</p>
+                        <div class="logbook-readable w-full h-full bg-stone-900/60 border-2 border-stone-700/60 rounded p-4 text-stone-400 text-xs font-serif leading-relaxed flex flex-col justify-between shadow-2xl relative overflow-hidden rotate-1">
+                            <!-- Water stains and dirt texture overlay -->
+                            <div class="absolute inset-0 bg-gradient-to-br from-amber-950/40 via-stone-950/70 to-emerald-950/50 pointer-events-none mix-blend-multiply"></div>
+                            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-stone-900/80 rounded-full blur-xl pointer-events-none"></div>
+                            
+                            <div class="relative z-10">
+                                <p class="font-bold text-center mb-2 tracking-widest text-stone-500 line-through decoration-stone-700">MS. - OSTERWICK - LOGBUCH</p>
+                                <p class="text-stone-500 italic opacity-70">Sturmnacht... [Schiffswrack beschädigt]... Wasser im Rumpf gestiegen... Seiten unleserlich vergilbt...</p>
                             </div>
-                            <p class="mt-2 italic text-amber-200/90">Position Unbekannt. Breiten- und Längengrade verwaschen im Regen, doch der Name des Schiffes bleibt bestehen.</p>
-                            <p class="font-mono text-center text-xs text-amber-400 font-bold tracking-widest">MS. - O S T E R W I C K</p>
+                            <p class="relative z-10 mt-1 italic text-stone-600">Der Name des Schiffes ist kaum noch zu entziffern, vom Schlamm zerfressen.</p>
+                            <p class="relative z-10 font-mono text-center text-xs text-stone-600 font-bold tracking-widest opacity-40 select-none">M S . - O S T E R W I C K</p>
                         </div>
                     </div>
                 `
@@ -490,26 +593,19 @@
                 graphics: `
                     <svg viewBox="0 0 400 250" class="w-full h-full">
                         <rect width="400" height="250" fill="#030712"/>
-                        
-                        <!-- Stormy Cliff Silhouettes -->
                         <path d="M 0 120 Q 50 110 90 160 L 90 250 L 0 250 Z" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
                         <path d="M 310 150 Q 350 100 400 110 L 400 250 L 310 250 Z" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
-
                         <path d="M 0 200 C 100 180, 200 220, 400 190 L 400 250 L 0 250 Z" fill="#0284c7" opacity="0.5"/>
                         
-                        <!-- Lighthouse Tower -->
                         <rect x="185" y="160" width="30" height="90" fill="#334155"/>
                         <circle cx="200" cy="150" r="15" fill="#f59e0b" opacity="0.8"/>
                         
-                        <!-- Light Beams -->
                         <polygon id="beamA" points="200,150 50,20 100,20" fill="#38bdf8" opacity="0.35"/>
                         <polygon id="beamB" points="200,150 300,20 350,20" fill="#f59e0b" opacity="0.35"/>
 
-                        <!-- Target Marker -->
                         <circle cx="200" cy="40" r="12" fill="#065f46" stroke="#10b981" stroke-width="2"/>
                         <text x="200" y="44" text-anchor="middle" font-size="8" font-weight="bold" fill="#ecfdf5">ZIEL</text>
 
-                        <!-- Lightning-revealed degree clues (FREI SCHWEBEND, OHNE RAHMEN, NUR SICHTBAR BEI BLITZ) -->
                         <g class="lightning-text pointer-events-none">
                             <text id="clueA" x="45" y="149" text-anchor="middle" font-size="22" font-weight="900" fill="#38bdf8" font-family="'JetBrains Mono', monospace"></text>
                             <text id="clueB" x="355" y="149" text-anchor="middle" font-size="22" font-weight="900" fill="#f59e0b" font-family="'JetBrains Mono', monospace"></text>
@@ -527,15 +623,93 @@
             if (currentStage === 1) {
                 updateStage1Graphics();
             } else if (currentStage === 2) {
-                document.getElementById('vHint1').textContent = getVString(puzzleState.stg2.target1);
-                document.getElementById('vHint2').textContent = getVString(puzzleState.stg2.target2);
-                document.getElementById('vHint3').textContent = getVString(puzzleState.stg2.target3);
+                document.getElementById('vHint1').textContent = getVString(puzzleState.stg2.targetV1);
+                document.getElementById('vHint2').textContent = getVString(puzzleState.stg2.targetV2);
+                document.getElementById('vHint3').textContent = getVString(puzzleState.stg2.targetV3);
             } else if (currentStage === 4) {
                 document.getElementById('clueA').textContent = puzzleState.stg4.targetA + '°';
                 document.getElementById('clueB').textContent = puzzleState.stg4.targetB + '°';
             }
 
+            renderWaterLevel();
             renderPuzzleControls();
+        }
+
+        function renderWaterLevel() {
+            const levelText = document.getElementById('waterLevelText');
+            const fillEl = document.querySelector('.water-gauge-fill');
+            
+            // Progressive water levels per stage (Stage 0: 1.5m, Stage 1: 3.0m, Stage 2: 4.8m, Stage 3: 6.4m, Stage 4: 8.0m max flood peak)
+            const levels = [1.5, 3.0, 4.8, 6.4, 8.0];
+            const currentVal = levels[currentStage] !== undefined ? levels[currentStage] : 8.0;
+            
+            if (levelText) {
+                levelText.textContent = `+${currentVal.toFixed(1)}m`;
+            }
+
+            if (fillEl) {
+                // Calculate fill width percentage based on max 8.0m mark
+                const percentage = Math.min(100, (currentVal / 8.0) * 100);
+                fillEl.style.width = `${percentage}%`;
+            }
+        }
+
+        function spawnDreamSymbols(count) {
+            const symbols = ['V', '⚓', '👁', '≈', '⚡', 'Ø', 'Ψ', 'Ω', '§', 'Δ', 'M', 'S', 'O', 'W', 'K', '?', '!', '~', '⚲', '⏚'];
+            const colors = ['#38bdf8', '#f59e0b', '#2dd4bf', '#94a3b8', '#ffffff', '#06b6d4'];
+            
+            for (let i = 0; i < count; i++) {
+                const sym = document.createElement('div');
+                sym.className = 'dream-symbol';
+                sym.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                
+                // Zufällige Eigenschaften für Vielfalt
+                sym.style.left = Math.random() * 100 + 'vw';
+                sym.style.color = colors[Math.floor(Math.random() * colors.length)];
+                sym.style.fontSize = (Math.random() * 2 + 1) + 'rem';
+                
+                // CSS Variablen für Flugbahn und Skalierung
+                sym.style.setProperty('--drift', (Math.random() * 120 - 60) + 'px');
+                sym.style.setProperty('--scale-max', Math.random() * 1.5 + 0.8);
+                
+                // Zufälliges Timing
+                const duration = Math.random() * 2.5 + 2.0; // 2.0s bis 4.5s Flugzeit
+                const delay = Math.random() * 1.0; // 0s bis 1.0s Verzögerung
+                sym.style.animationDuration = duration + 's';
+                sym.style.animationDelay = delay + 's';
+                
+                document.body.appendChild(sym);
+                
+                // Nach Abschluss der Animation entfernen
+                setTimeout(() => {
+                    sym.remove();
+                }, (duration + delay) * 1000);
+            }
+        }
+
+        function triggerFloodAnimation(nextStageIndex, callback) {
+            const overlay = document.getElementById('floodAnimationOverlay');
+            const meterEl = document.getElementById('floodAlertMeter');
+            
+            const levels = [1.5, 3.0, 4.8, 6.4, 8.0];
+            const targetMeter = levels[nextStageIndex] !== undefined ? levels[nextStageIndex] : 8.0;
+
+            if (meterEl) {
+                meterEl.textContent = `+${targetMeter.toFixed(1)}m Ü.NN`;
+            }
+
+            // Traum-Symbole parallel zum Wasser triggern
+            spawnDreamSymbols(30);
+
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    if (callback) callback();
+                }, 2100);
+            } else {
+                if (callback) callback();
+            }
         }
 
         function updateStage1Graphics() {
@@ -575,12 +749,13 @@
             if (currentStage === 0) {
                 panel.innerHTML = `
                     <div class="w-full flex flex-col items-center gap-2">
-                        <button onclick="startDream()" class="w-full py-3.5 px-6 bg-gradient-to-r from-amber-600 via-cyan-600 to-teal-600 hover:from-amber-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-xl flex items-center justify-center gap-2 transition-all transform active:scale-95 font-cinzel text-base">
+                        <button type="button" id="btnStartDream" class="w-full py-3.5 px-6 bg-gradient-to-r from-amber-600 via-cyan-600 to-teal-600 hover:from-amber-500 hover:to-teal-500 text-white font-bold rounded-xl shadow-xl flex items-center justify-center gap-2 transition-all transform active:scale-95 font-cinzel text-base cursor-pointer">
                             <i class="fa-solid fa-moon text-amber-300"></i>
                             <span>Traum betreten</span>
                         </button>
                     </div>
                 `;
+                document.getElementById('btnStartDream').addEventListener('click', startDream);
             } else if (currentStage === 1) {
                 const currentArr = puzzleState.stg1.flags;
                 panel.innerHTML = `
@@ -618,28 +793,35 @@
                     </div>
                 `;
             } else if (currentStage === 3) {
+                if (!puzzleState.stg3.letters || puzzleState.stg3.letters.length === 0) {
+                    puzzleState.stg3.letters = shuffleArray(['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']);
+                }
+                const r1 = puzzleState.stg3.letters.slice(0, 10);
+                const r2 = puzzleState.stg3.letters.slice(10, 19);
+                const r3 = puzzleState.stg3.letters.slice(19, 26);
+
                 panel.innerHTML = `
                     <div class="w-full flex flex-col items-center gap-2">
-                        <div class="w-full max-w-sm flex items-center justify-center bg-slate-950 border-2 border-cyan-600/80 rounded-xl px-4 py-2.5 shadow-inner min-h-[46px]" id="displayInputBox">
-                            <span id="typedCodeDisplay" class="font-code text-sm sm:text-base text-amber-300 uppercase tracking-widest min-h-[20px] flex items-center"></span>
+                        <div class="w-full max-w-sm flex items-center justify-center bg-stone-950 border-2 border-cyan-800/80 rounded-lg px-4 py-2.5 shadow-inner min-h-[46px]" id="displayInputBox">
+                            <span id="typedCodeDisplay" class="font-code text-sm sm:text-base text-amber-300 font-bold uppercase tracking-widest min-h-[20px] flex items-center"></span>
                         </div>
 
-                        <div class="w-full max-w-md bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 flex flex-col gap-1.5 shadow-xl mt-1">
+                        <div class="w-full max-w-md bg-slate-900 border-2 border-cyan-700/80 rounded-xl p-3 flex flex-col gap-2 shadow-2xl mt-1">
                             <div class="flex justify-center gap-1">
-                                ${['Q','W','E','R','T','Z','U','I','O','P'].map(l => `<button onclick="typeKey('${l}')" class="retro-key w-8 sm:w-9 h-9 rounded-lg text-amber-300 font-code font-bold text-xs sm:text-sm flex items-center justify-center">${l}</button>`).join('')}
+                                ${r1.map(l => `<button onclick="typeKey('${l}')" class="retro-key w-8 sm:w-9 h-9 rounded text-cyan-200 font-code font-bold text-xs sm:text-sm flex items-center justify-center border-slate-700 bg-slate-800 shadow-md hover:bg-slate-700 active:scale-95 select-none">${l}</button>`).join('')}
                             </div>
                             <div class="flex justify-center gap-1">
-                                ${['A','S','D','F','G','H','J','K','L'].map(l => `<button onclick="typeKey('${l}')" class="retro-key w-8 sm:w-9 h-9 rounded-lg text-amber-300 font-code font-bold text-xs sm:text-sm flex items-center justify-center">${l}</button>`).join('')}
+                                ${r2.map(l => `<button onclick="typeKey('${l}')" class="retro-key w-8 sm:w-9 h-9 rounded text-cyan-200 font-code font-bold text-xs sm:text-sm flex items-center justify-center border-slate-700 bg-slate-800 shadow-md hover:bg-slate-700 active:scale-95 select-none">${l}</button>`).join('')}
                             </div>
                             <div class="flex justify-center gap-1">
-                                ${['Y','X','C','V','B','N','M'].map(l => `<button onclick="typeKey('${l}')" class="retro-key w-8 sm:w-9 h-9 rounded-lg text-amber-300 font-code font-bold text-xs sm:text-sm flex items-center justify-center">${l}</button>`).join('')}
+                                ${r3.map(l => `<button onclick="typeKey('${l}')" class="retro-key w-8 sm:w-9 h-9 rounded text-cyan-200 font-code font-bold text-xs sm:text-sm flex items-center justify-center border-slate-700 bg-slate-800 shadow-md hover:bg-slate-700 active:scale-95 select-none">${l}</button>`).join('')}
                             </div>
                             <div class="flex justify-center gap-1.5 pt-1">
-                                <button onclick="typeKey(' ')" class="retro-key px-4 h-9 rounded-lg text-slate-300 font-code text-[11px] font-bold flex items-center justify-center">LEERZEICHEN</button>
-                                <button onclick="typeKey('-')" class="retro-key w-10 h-9 rounded-lg text-slate-300 font-code font-bold text-xs flex items-center justify-center">-</button>
-                                <button onclick="typeKey('.')" class="retro-key w-9 h-9 rounded-lg text-slate-300 font-code font-bold text-xs flex items-center justify-center">.</button>
-                                <button onclick="deleteKey()" class="retro-key px-3 h-9 rounded-lg text-red-400 font-code text-xs font-bold flex items-center justify-center gap-1"><i class="fa-solid fa-delete-left"></i></button>
-                                <button onclick="checkCode()" class="retro-key px-4 h-9 rounded-lg bg-cyan-950/80 border-cyan-600 text-cyan-200 font-code text-xs font-bold flex items-center justify-center gap-1"><i class="fa-solid fa-check"></i></button>
+                                <button onclick="typeKey(' ')" class="retro-key px-4 h-9 rounded text-slate-300 font-code text-[10px] font-bold flex items-center justify-center bg-slate-800 border border-slate-700 shadow hover:bg-slate-700">LEER</button>
+                                <button onclick="typeKey('-')" class="retro-key w-10 h-9 rounded text-cyan-200 font-code font-bold text-sm flex items-center justify-center border border-slate-700 bg-slate-800 shadow hover:bg-slate-700">-</button>
+                                <button onclick="typeKey('.')" class="retro-key w-9 h-9 rounded text-cyan-200 font-code font-bold text-sm flex items-center justify-center border border-slate-700 bg-slate-800 shadow hover:bg-slate-700">.</button>
+                                <button onclick="deleteKey()" class="retro-key px-3 h-9 rounded text-rose-300 font-code text-xs font-bold flex items-center justify-center gap-1 bg-slate-800 border border-slate-700 shadow hover:bg-slate-700"><i class="fa-solid fa-delete-left"></i></button>
+                                <button onclick="checkCode()" class="retro-key px-4 h-9 rounded bg-gradient-to-r from-emerald-700 to-cyan-700 border-emerald-600 text-white font-code text-xs font-bold flex items-center justify-center gap-1 shadow hover:from-emerald-600 hover:to-cyan-600"><i class="fa-solid fa-check"></i></button>
                             </div>
                         </div>
                     </div>
@@ -677,22 +859,24 @@
             }
         }
 
-        window.startDream = function() {
+        function startDream() {
             audio.init();
             audio.muted = false;
             document.getElementById('soundIcon').className = 'fa-solid fa-volume-high text-cyan-400';
             audio.startAmbientMusic();
             audio.playClick();
+            
             currentStage = 1;
             renderStage();
-        };
+        }
 
         window.typeKey = function(char) {
             audio.init();
             audio.playClick();
             if (puzzleState.stg3.inputCode.length < 25) {
                 puzzleState.stg3.inputCode += char;
-                updateTypedDisplay();
+                puzzleState.stg3.letters = shuffleArray(puzzleState.stg3.letters);
+                renderPuzzleControls();
             }
         };
 
@@ -701,9 +885,57 @@
             audio.playClick();
             if (puzzleState.stg3.inputCode.length > 0) {
                 puzzleState.stg3.inputCode = puzzleState.stg3.inputCode.slice(0, -1);
-                updateTypedDisplay();
+                puzzleState.stg3.letters = shuffleArray(puzzleState.stg3.letters);
+                renderPuzzleControls();
             }
         };
+
+        window.checkCode = function() {
+            audio.init();
+            const typed = puzzleState.stg3.inputCode.trim().toUpperCase();
+            if (typed === "MS. - OSTERWICK" || typed === "MS OSTERWICK" || typed === "OSTERWICK") {
+                puzzleState.stg3.solved = true;
+                audio.playSolve();
+                currentStage = 4;
+                renderStage();
+            } else {
+                audio.playError();
+                const box = document.getElementById('displayInputBox');
+                if (box) {
+                    box.classList.add('animate-shake', 'border-red-500');
+                    setTimeout(() => box.classList.remove('animate-shake', 'border-red-500'), 400);
+                }
+            }
+        };
+
+        window.changeBeam = function(target, delta) {
+            audio.init();
+            audio.playClick();
+            if (target === 'A') {
+                puzzleState.stg4.angleA = Math.max(0, Math.min(90, puzzleState.stg4.angleA + delta));
+            } else {
+                puzzleState.stg4.angleB = Math.max(0, Math.min(90, puzzleState.stg4.angleB + delta));
+            }
+            renderPuzzleControls();
+            updateLighthouseBeams();
+            checkStage4Win();
+        };
+
+        function updateLighthouseBeams() {
+            if (currentStage !== 4) return;
+            const p = puzzleState.stg4;
+            const beamA = document.getElementById('beamA');
+            const beamB = document.getElementById('beamB');
+
+            if (beamA) {
+                const xOffsetA = 50 + (p.angleA * 1.2);
+                beamA.setAttribute('points', `200,150 ${xOffsetA},20 ${xOffsetA + 50},20`);
+            }
+            if (beamB) {
+                const xOffsetB = 150 + (p.angleB * 1.2);
+                beamB.setAttribute('points', `200,150 ${xOffsetB},20 ${xOffsetB + 50},20`);
+            }
+        }
 
         function updateTypedDisplay() {
             const displayEl = document.getElementById('typedCodeDisplay');
@@ -726,6 +958,18 @@
             checkStage1Win();
         };
 
+        function checkStage1Win() {
+            const flags = puzzleState.stg1.flags;
+            if (flags[0] === 'W' && flags[1] === 'I' && flags[2] === 'C' && flags[3] === 'K') {
+                puzzleState.stg1.solved = true;
+                audio.playSolve();
+                triggerFloodAnimation(2, () => {
+                    currentStage = 2;
+                    renderStage();
+                });
+            }
+        }
+
         window.adjustValve = function(num) {
             audio.init();
             audio.playClick();
@@ -744,110 +988,30 @@
             checkStage2Win();
         };
 
-        window.checkCode = function() {
-            audio.init();
-            const rawVal = puzzleState.stg3.inputCode.toUpperCase();
-            const sanitized = rawVal.replace(/[^A-Z]/g, '');
-
-            const boxEl = document.getElementById('displayInputBox');
-
-            if (sanitized.includes('OSTERWICK')) {
-                audio.playSolve();
-                puzzleState.stg3.solved = true;
-
-                if (boxEl) {
-                    boxEl.classList.remove('border-cyan-600/80');
-                    boxEl.classList.add('border-emerald-500', 'bg-emerald-950/40');
-                }
-
-                setTimeout(() => {
-                    currentStage = 4;
-                    renderStage();
-                }, 800);
-            } else {
-                audio.playError();
-                if (boxEl) {
-                    boxEl.classList.add('border-red-500', 'animate-shake');
-                    setTimeout(() => boxEl.classList.remove('border-red-500', 'animate-shake'), 600);
-                }
-            }
-        };
-
-        window.changeBeam = function(beam, delta) {
-            audio.init();
-            audio.playClick();
-            if (beam === 'A') {
-                puzzleState.stg4.angleA = Math.max(0, Math.min(90, puzzleState.stg4.angleA + delta));
-            } else if (beam === 'B') {
-                puzzleState.stg4.angleB = Math.max(0, Math.min(90, puzzleState.stg4.angleB + delta));
-            }
-            renderPuzzleControls();
-            updateLighthouseBeams();
-            checkStage4Win();
-        };
-
-        window.updateLighthouseBeams = function() {
-            const beamA = document.getElementById('beamA');
-            const beamB = document.getElementById('beamB');
-            
-            if (beamA) {
-                const radA = (puzzleState.stg4.angleA - 45) * (Math.PI / 180);
-                const x1A = 200 + Math.sin(radA - 0.15) * 180;
-                const x2A = 200 + Math.sin(radA + 0.15) * 180;
-                const yA = 150 - Math.cos(radA) * 180;
-                beamA.setAttribute('points', `200,150 ${x1A},${yA} ${x2A},${yA}`);
-            }
-
-            if (beamB) {
-                const radB = (puzzleState.stg4.angleB - 45) * (Math.PI / 180);
-                const x1B = 200 + Math.sin(radB - 0.15) * 180;
-                const x2B = 200 + Math.sin(radB + 0.15) * 180;
-                const yB = 150 - Math.cos(radB) * 180;
-                beamB.setAttribute('points', `200,150 ${x1B},${yB} ${x2B},${yB}`);
-            }
-        };
-
-        function checkStage1Win() {
-            const current = puzzleState.stg1.flags.join('');
-            const target = puzzleState.stg1.target.join('');
-            if (current === target && !puzzleState.stg1.solved) {
-                puzzleState.stg1.solved = true;
-                audio.playSolve();
-
-                setTimeout(() => {
-                    currentStage = 2;
-                    renderStage();
-                }, 1000);
-            }
-        }
-
         function checkStage2Win() {
             const p = puzzleState.stg2;
-            if (p.v1 === p.target1 && p.v2 === p.target2 && p.v3 === p.target3 && !p.solved) {
-                p.solved = true;
+            if (p.v1 === p.targetV1 && p.v2 === p.targetV2 && p.v3 === p.targetV3) {
+                puzzleState.stg2.solved = true;
                 audio.playSolve();
-
-                setTimeout(() => {
+                triggerFloodAnimation(3, () => {
                     currentStage = 3;
                     renderStage();
-                }, 1000);
+                });
             }
         }
 
         function checkStage4Win() {
-            if (puzzleState.stg4.angleA === puzzleState.stg4.targetA && puzzleState.stg4.angleB === puzzleState.stg4.targetB && !puzzleState.stg4.solved) {
-                audio.playSolve();
+            const p = puzzleState.stg4;
+            if (p.angleA === p.targetA && p.angleB === p.targetB) {
                 puzzleState.stg4.solved = true;
-
-                setTimeout(() => {
+                audio.playSolve();
+                triggerFloodAnimation(4, () => {
                     document.getElementById('victoryModal').classList.remove('hidden');
-                }, 800);
+                });
             }
         }
 
         window.copyCertitudeLink = function() {
-            audio.init();
-            audio.playClick();
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(CERTITUDE_URL).then(() => {
                     showToast("Checker-Link kopiert!");
@@ -889,11 +1053,12 @@
 
         function initGame() {
             currentStage = 0;
-            randomizePuzzleValues();
             puzzleState.stg1 = { flags: ['C', 'W', 'K', 'I'], target: ['W', 'I', 'C', 'K'], solved: false };
-            puzzleState.stg2.v1 = 0; puzzleState.stg2.v2 = 0; puzzleState.stg2.v3 = 0; puzzleState.stg2.solved = false;
-            puzzleState.stg3 = { inputCode: '', solved: false };
+            puzzleState.stg2 = { v1: 0, v2: 0, v3: 0, targetV1: 5, targetV2: 8, targetV3: 5, solved: false };
+            puzzleState.stg3 = { inputCode: '', letters: [], solved: false };
             puzzleState.stg4.angleA = 10; puzzleState.stg4.angleB = 70; puzzleState.stg4.solved = false;
+
+            randomizePuzzleValues();
 
             renderStage();
         }
